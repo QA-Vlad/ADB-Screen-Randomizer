@@ -63,8 +63,40 @@ object SentryInitializer {
                 options.connectionTimeoutMillis = 10000 // 10 секунд
                 options.readTimeoutMillis = 10000 // 10 секунд
                 
-                // Фильтруем чувствительные данные
+                // Фильтруем чувствительные данные и нежелательные ошибки
                 options.beforeSend = SentryOptions.BeforeSendCallback { event, _ ->
+                    // Проверяем, относится ли ошибка к ADB Device Manager
+                    val isAdbDeviceManagerError = event.exceptions?.any { exception ->
+                        exception.stacktrace?.frames?.any { frame ->
+                            frame.module?.startsWith("io.github.qavlad.adbdevicemanager") == true ||
+                            frame.filename?.contains("adbdevicemanager") == true
+                        } == true
+                    } == true
+                    
+                    // Если ошибка не от ADB Device Manager, не отправляем её
+                    if (!isAdbDeviceManagerError) {
+                        PluginLogger.debug("Filtering out non-ADB Device Manager error: ${event.message}")
+                        return@BeforeSendCallback null
+                    }
+                    
+                    // Фильтруем нормальные ADB ошибки, которые не являются багами
+                    val isNormalAdbError = event.exceptions?.any { exception ->
+                        val exceptionType = exception.type
+                        val message = exception.value ?: ""
+                        
+                        // ADB ошибки авторизации - это нормально
+                        (exceptionType == "AdbCommandRejectedException" && message.contains("device unauthorized")) ||
+                        // ADB ошибки подключения - тоже нормально  
+                        (exceptionType == "AdbCommandRejectedException" && message.contains("device offline")) ||
+                        // Устройство не найдено - нормально
+                        (exceptionType == "AdbCommandRejectedException" && message.contains("device not found"))
+                    } == true
+                    
+                    if (isNormalAdbError) {
+                        PluginLogger.debug("Filtering out normal ADB error: ${event.message}")
+                        return@BeforeSendCallback null
+                    }
+                    
                     // Удаляем пути к файлам пользователя из стек-трейсов
                     event.exceptions?.forEach { exception ->
                         exception.stacktrace?.frames?.forEach { frame ->
