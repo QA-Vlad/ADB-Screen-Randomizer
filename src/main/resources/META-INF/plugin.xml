@@ -72,6 +72,14 @@
 
     <!-- Change notes -->
     <change-notes><![CDATA[
+    <h3>Version 1.0.1 - Stability Improvements</h3>
+    <ul>
+        <li><b>Fixed:</b> NullPointerException in PluginSettings initialization during background operations</li>
+        <li><b>Fixed:</b> NullPointerException in LoggingConfiguration when ApplicationManager is unavailable</li>
+        <li><b>Improved:</b> Enhanced error handling with safe fallback mechanisms for plugin services</li>
+        <li><b>Improved:</b> Better stability during IDE shutdown and background coroutine execution</li>
+    </ul>
+
     <h3>Version 1.0.0 - Initial Release</h3>
     <ul>
         <li><b>Added:</b> Screen randomization with 200+ device presets across 12 categories</li>

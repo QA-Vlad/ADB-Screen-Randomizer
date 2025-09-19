@@ -1,5 +1,6 @@
 package io.github.qavlad.adbdevicemanager.utils.logging
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.PersistentStateComponent
 import com.intellij.openapi.components.Service
 import com.intellij.openapi.components.State
@@ -127,6 +128,23 @@ class LoggingConfiguration : PersistentStateComponent<LoggingConfiguration.State
     }
     
     companion object {
-        fun getInstance(): LoggingConfiguration = service()
+        fun getInstance(): LoggingConfiguration {
+            return try {
+                val application = ApplicationManager.getApplication()
+                if (application != null) {
+                    application.getService(LoggingConfiguration::class.java)
+                } else {
+                    // Fallback для случаев, когда Application недоступен
+                    createDefaultConfiguration()
+                }
+            } catch (e: Exception) {
+                // В случае любой ошибки возвращаем конфигурацию по умолчанию
+                createDefaultConfiguration()
+            }
+        }
+        
+        private fun createDefaultConfiguration(): LoggingConfiguration {
+            return LoggingConfiguration()
+        }
     }
 }

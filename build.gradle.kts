@@ -10,7 +10,7 @@ plugins {
 }
 
 group = "io.github.qavlad"
-version = "1.0"
+version = "1.0.1"
 
 // Загружаем локальные properties если они есть
 val localPropertiesFile = rootProject.file("gradle-local.properties")

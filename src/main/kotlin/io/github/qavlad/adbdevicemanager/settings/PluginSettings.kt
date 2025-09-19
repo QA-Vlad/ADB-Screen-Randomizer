@@ -1,5 +1,6 @@
 package io.github.qavlad.adbdevicemanager.settings
 
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.components.*
 import com.intellij.util.xmlb.XmlSerializerUtil
 
@@ -62,6 +63,23 @@ class PluginSettings : PersistentStateComponent<PluginSettings> {
     
     companion object {
         val instance: PluginSettings
-            get() = service()
+            get() {
+                return try {
+                    val application = ApplicationManager.getApplication()
+                    if (application != null) {
+                        application.getService(PluginSettings::class.java)
+                    } else {
+                        // Fallback для случаев, когда Application недоступен (shutdown, early startup, background threads)
+                        createDefaultSettings()
+                    }
+                } catch (e: Exception) {
+                    // В случае любой ошибки возвращаем настройки по умолчанию
+                    createDefaultSettings()
+                }
+            }
+        
+        private fun createDefaultSettings(): PluginSettings {
+            return PluginSettings()
+        }
     }
 }
